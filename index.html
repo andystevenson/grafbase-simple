@@ -10,12 +10,28 @@
     body {
       display: grid;
       place-content: center;
+      gap: 1rem;
       block-size: 100vh;
       text-align: center;
     }
 
+    :empty {
+      display: none;
+    }
+
+    pre,
+    b {
+      color: white;
+      padding: 1rem;
+    }
+
     pre {
       text-align: left;
+      background-color: green;
+    }
+
+    b {
+      background-color: red;
     }
   </style>
 </head>
@@ -24,7 +40,9 @@
   <h1>grafbase-simple</h1>
   <p>press the button to fetch todos</p>
   <button>grafbase</button>
+  <button id="edge">grafbase(edge)</button>
   <pre id="todos"></pre>
+  <b id="failed"></b>
 
   <script>
     const query = `query {
@@ -37,26 +55,38 @@
                         }
                       }
                     }
-                  }`
+                  }`.replace(/\s+/g, ' ')
     const body = JSON.stringify({ query })
     const headers = { 'content-type': 'application/json' }
-    const button = document.querySelector('button')
+    const local = document.querySelector('button')
+    const edge = document.getElementById('edge')
     const todos = document.getElementById('todos')
+    const failed = document.getElementById('failed')
+
+
     const endpoint = 'http://127.0.0.1:4000/graphql'
 
-    button?.addEventListener('click', grafbase)
+    const params = new URLSearchParams({ query })
+    console.log(params, `${params}`);
+    const edgeEndpoint = `${location.href}grafbase?${params}`
 
-    async function grafbase() {
+    local?.addEventListener('click', () => grafbase(endpoint, { method: 'POST', body }))
+    edge?.addEventListener('click', () => grafbase(edgeEndpoint, { method: 'GET' }))
+
+    async function grafbase(url, options) {
+      console.log({ url });
       try {
-        const response = await fetch(endpoint, { method: 'POST', headers, body })
+        failed.textContent = ''
+        todos.textContent = ''
+        const response = await fetch(url, { headers, ...options })
         if (response.ok) {
           const json = await response.json()
           todos.textContent = JSON.stringify(json, null, 2)
           return
         }
-        throw Error(`fetch response failed with ${response.status}, ${response.statusText}`)
+        failed.textContent = `grafbase response failed with '${response.status}, ${response.statusText}'`
       } catch (error) {
-        console.error(error.message)
+        failed.textContent = `grafbase failed with '${error.message}'`
       }
     }
 

@@ -1,18 +1,14 @@
-export default async () => {
+export default async (request) => {
   try {
-    const query = `query {
-                    todoCollection(first: 100) {
-                      edges {
-                        node {
-                          id
-                          complete
-                          title
-                        }
-                      }
-                    }
-}`
-    const url = 'http://127.0.0.1:4000/graphql'
-    const response = await fetch(url, {
+    const url = new URL(request.url)
+    const query = url.searchParams.get('query')
+
+    const grafbase =
+      url.hostname === 'localhost'
+        ? 'http://127.0.0.1:4000/graphql'
+        : `${url.origin}/graphql`
+
+    const response = await fetch(grafbase, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
