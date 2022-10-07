@@ -6,12 +6,13 @@ export default async (request) => {
     const grafbase =
       url.hostname === 'localhost'
         ? 'http://127.0.0.1:4000/graphql'
-        : `${url.origin}/graphql`
+        : Deno.env.get('GRAFBASE_API_URL')
 
     const response = await fetch(grafbase, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
+        'x-api-key': Deno.env.get('GRAFBASE_API_KEY'),
       },
       body: JSON.stringify({ query }),
     })
